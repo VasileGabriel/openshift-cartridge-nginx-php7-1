@@ -20,7 +20,6 @@ font/truetype
 font/opentype
 application/vnd.ms-fontobject
 image/svg+xml;
-
 gzip_static on;
 gzip_proxied        expired no-cache no-store private auth;
 gzip_disable        "MSIE [1-6]\.";
@@ -29,30 +28,34 @@ gzip_vary           on;
 client_max_body_size 8M;
 
 server {
-    	listen  <%= ENV['OPENSHIFT_PHP_IP'] %>:<%= ENV['OPENSHIFT_PHP_PORT'] %>;
-    	root    <%= ENV['OPENSHIFT_REPO_DIR'] %>/public;
-	
-	
-	location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|eot|mp4|ogg|ogv|webm)$ {
-		access_log off;
-		log_not_found off;
 
-		# Some basic cache-control for static files to be sent to the browser
-		expires max;
-		add_header Pragma public;
-		add_header Cache-Control "public, must-revalidate, proxy-revalidate";
-	}
-	
-	
-    	location / {
-        	index index.php  index.html index.htm;
-    	}
-	
-	# pass the PHP scripts to PHP-FPM
-	location ~ \.php$ {
-    		fastcgi_pass unix:<%= ENV['OPENSHIFT_PHP_SOCKET'] %>;
-    		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    		fastcgi_param PATH_INFO $fastcgi_script_name;
-    		include <%= ENV['OPENSHIFT_PHP_DIR'] %>/usr/conf/fastcgi_params;
-	}
+        listen  <%= ENV['OPENSHIFT_PHP_IP'] %>:<%= ENV['OPENSHIFT_PHP_PORT'] %>;
+        root    <%= ENV['OPENSHIFT_REPO_DIR'] %>/public;
+
+    location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|eot|mp4|ogg|ogv|webm)$ {
+        access_log off;
+        log_not_found off;
+
+        # Some basic cache-control for static files to be sent to the browser
+        expires max;
+        add_header Pragma public;
+        add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+    }
+
+    location @rewrites {
+        rewrite ^(.*)$ /index.php/$1 last;
+    }
+
+    location / {
+        index index.php  index.html index.htm;
+        try_files $uri $uri/ @rewrites;
+    }
+
+    # pass the PHP scripts to PHP-FPM
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass unix:<%= ENV['OPENSHIFT_PHP_SOCKET'] %>;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_script_name;
+        include <%= ENV['OPENSHIFT_PHP_DIR'] %>/usr/conf/fastcgi_params;
+    }
 }
