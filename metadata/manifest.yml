@@ -6,7 +6,7 @@ Version: "7"
 Versions:
 - 1.11.7
 - 7.1.0
-Website: https://github.com/budisteikul/openshift-cartridge-nginx-php7
+Website: https://github.com/VasileGabriel/openshift-cartridge-nginx-php7-1/
 Cartridge-Version: 5.1.0
 Cartridge-Vendor: budisteikul
 Categories:
